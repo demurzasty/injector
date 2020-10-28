@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
     container.install<logger, stdout_logger>(di::dependency_lifetime::singleton);
 
-    auto& logger = container.get<::logger>();
+    auto logger = container.get<::logger>();
 
     logger->log("Hello World!");
 }
