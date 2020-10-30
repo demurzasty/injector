@@ -1,5 +1,6 @@
 # injector
 
+[![Build Status](https://github.com/demurzasty/injector/workflows/CMake/badge.svg)](https://github.com/skypjack/entt/actions)  
 *injector* is a header-only, tiny and easy to use library for dependency injection written in *C++17*.
 
 ## Code Examples
