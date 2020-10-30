@@ -37,26 +37,8 @@ namespace di {
         });
     }
 
-    template<typename T, typename Factory>
-    void dependency_container::install(dependency_lifetime lifetime, Factory factory) {
-        _beans.emplace(typeid(T), detail::dependency_bean{
-            lifetime,
-            [factory]() { return factory(); },
-            nullptr
-        });
-    }
-
-    template<typename Interface, typename Implementation, typename Factory>
-    void dependency_container::install(dependency_lifetime lifetime, Factory factory) {
-        _beans.emplace(typeid(Interface), detail::dependency_bean{
-            lifetime,
-            [factory]() { return factory(); },
-            nullptr
-        });
-    }
-
     template<typename T>
-    void dependency_container::install(dependency_lifetime lifetime, const dependency_resolver& resolver) {
+    void dependency_container::install(dependency_lifetime lifetime, std::shared_ptr<T>(*resolver)(dependency_container&)) {
         _beans.emplace(typeid(T), detail::dependency_bean{
             lifetime,
             [this, resolver]() { return resolver(*this); },

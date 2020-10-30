@@ -7,8 +7,6 @@
 #include <unordered_map>
 
 namespace di {
-    class dependency_container;
-
     /**
      * @brief Determine lifetime of dependency. 
      * 
@@ -31,11 +29,6 @@ namespace di {
             std::shared_ptr<void> instance;
         };
     }
-
-    /**
-     * @brief External dependency resolver. 
-     */
-    using dependency_resolver = std::function<std::shared_ptr<void>(dependency_container&)>;
 
     /**
      * @brief Main container for dependencies. Threadsafe.
@@ -67,24 +60,6 @@ namespace di {
         void install(dependency_lifetime lifetime);
 
         /**
-         * @brief Install dependency with provided lifetime and factory.
-         * 
-         * @param lifetime Lifetime of dependency.
-         * @param factory Factory function returning T.
-         */
-        template<typename T, typename Factory>
-        void install(dependency_lifetime lifetime, Factory factory);
-
-        /**
-         * @brief Install dependency with provided lifetime and factory.
-         * 
-         * @param lifetime Lifetime of dependency.
-         * @param factory Factory function returning Implementation.
-         */
-        template<typename Interface, typename Implementation, typename Factory>
-        void install(dependency_lifetime lifetime, Factory factory);
-
-        /**
          * @brief Install dependency with provided lifetime and custom resolver.
          *        It's useful when you want to hide implementation of derived class
          *        and it is not visible publicly, i.e. platform specific implementations.
@@ -93,7 +68,7 @@ namespace di {
          * @param resolver Resolver.
          */
         template<typename T>
-        void install(dependency_lifetime lifetime, const dependency_resolver& resolver);
+        void install(dependency_lifetime lifetime, std::shared_ptr<T>(*resolver)(dependency_container&));
 
         /**
          * @brief Get (and create if needed) dependency. 
