@@ -97,6 +97,8 @@ namespace di {
             return std::make_shared<T>(injector, injector, injector, injector);
         } else if constexpr (std::is_constructible_v<T, dependency_injector, dependency_injector, dependency_injector, dependency_injector, dependency_injector>) {
             return std::make_shared<T>(injector, injector, injector, injector, injector);
+        } else {
+            static_assert(false, "No suitable constructor found");
         }
     }
 
