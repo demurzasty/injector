@@ -78,12 +78,12 @@ namespace di {
     }
 
     template<typename T>
-    bool dependency_container::installed() {
+    bool dependency_container::installed() const {
         return _beans.find(typeid(T)) != _beans.end();
     }
 
     template<typename T>
-    dependency_lifetime dependency_container::lifetime() {
+    dependency_lifetime dependency_container::lifetime() const {
         return _beans.at(typeid(T)).lifetime;
     }
 

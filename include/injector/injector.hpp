@@ -111,13 +111,13 @@ namespace di {
          * @brief Tell whether dependency is installed.
          */
         template<typename T>
-        bool installed();
+        bool installed() const;
 
         /**
          * @brief Returns lifetime of dependency.
          */
         template<typename T>
-        dependency_lifetime lifetime();
+        dependency_lifetime lifetime() const;
 
     private:
         std::unordered_map<std::type_index, detail::dependency_bean> _beans;
