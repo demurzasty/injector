@@ -3,6 +3,7 @@
 #include "injector.hpp"
 
 #include <cassert>
+#include <type_traits>
 
 namespace di {
     template<typename T>
@@ -16,6 +17,8 @@ namespace di {
 
     template<typename T>
     void dependency_container::install(dependency_lifetime lifetime) {
+        static_assert(!std::is_abstract_v<T>, "Cannot install abstract class - provide implementation");
+
         _beans.emplace(typeid(T), detail::dependency_bean{
             lifetime,
             [this] { return resolve<T>(); },
@@ -25,6 +28,8 @@ namespace di {
 
     template<typename Interface, typename Implementation>
     void dependency_container::install(dependency_lifetime lifetime) {
+        static_assert(!std::is_abstract_v<Implementation>, "Cannot install abstract class");
+
         _beans.emplace(typeid(Interface), detail::dependency_bean{
             lifetime,
             [this] { return resolve<Implementation>(); },
