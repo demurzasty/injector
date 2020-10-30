@@ -8,3 +8,6 @@ target_link_libraries (basic PUBLIC injector)
 
 add_executable (resolver "resolver.cpp")
 target_link_libraries (resolver PUBLIC injector)
+
+add_executable (compile_time "compile_time.cpp")
+target_link_libraries (compile_time PUBLIC injector)

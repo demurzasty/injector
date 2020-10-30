@@ -1,5 +1,7 @@
 #pragma once 
 
+#include "identifier.hpp"
+
 #include <memory>
 #include <typeinfo>
 #include <typeindex>
@@ -7,8 +9,6 @@
 #include <unordered_map>
 
 namespace di {
-    class dependency_container;
-
     /**
      * @brief Determine lifetime of dependency. 
      * 
@@ -24,23 +24,36 @@ namespace di {
         singleton,
     };
 
+    template<typename Identifier>
+    class basic_dependency_container;
+
     namespace detail {
         struct dependency_bean {
             dependency_lifetime lifetime = dependency_lifetime::singleton;
             std::function<std::shared_ptr<void>()> factory;
             std::shared_ptr<void> instance;
         };
+
+        template<typename Identifier>
+        struct basic_dependency_injector {
+            basic_dependency_container<Identifier>& container;
+
+            template<typename T>
+            operator std::shared_ptr<T>();
+        };
     }
 
     /**
      * @brief External dependency resolver. 
      */
-    using dependency_resolver = std::function<std::shared_ptr<void>(dependency_container&)>;
+    template<typename Identifier = dependency_default_identifier>
+    using basic_dependency_resolver = std::function<std::shared_ptr<void>(basic_dependency_container<Identifier>&)>;
 
     /**
      * @brief Main container for dependencies. Threadsafe.
      */
-    class dependency_container {
+    template<typename Identifier = dependency_default_identifier>
+    class basic_dependency_container {
     public:
         /**
          * @brief Install dependency statically with provided instance as singleton lifetime.
@@ -93,7 +106,7 @@ namespace di {
          * @param resolver Resolver.
          */
         template<typename T>
-        void install(dependency_lifetime lifetime, const dependency_resolver& resolver);
+        void install(dependency_lifetime lifetime, const basic_dependency_resolver<Identifier>& resolver);
 
         /**
          * @brief Get (and create if needed) dependency. 
@@ -120,18 +133,11 @@ namespace di {
         dependency_lifetime lifetime() const;
 
     private:
-        std::unordered_map<std::type_index, detail::dependency_bean> _beans;
+        std::unordered_map<typename Identifier::index_type, detail::dependency_bean> _beans;
     };
 
-    /**
-     * @brief Helper class for dependency injection to constructor.
-     */
-    struct dependency_injector {
-        dependency_container& container;
-
-        template<typename T>
-        operator std::shared_ptr<T>();
-    };
+    using dependency_container = basic_dependency_container<dependency_runtime_identifier>;
+    using dependency_resolver = basic_dependency_resolver<dependency_runtime_identifier>;
 }
 
 #include "injector.inl"
