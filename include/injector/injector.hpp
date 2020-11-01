@@ -7,6 +7,8 @@
 #include <unordered_map>
 
 namespace di {
+    class dependency_container;
+
     /**
      * @brief Determine lifetime of dependency. 
      * 
@@ -27,6 +29,16 @@ namespace di {
             dependency_lifetime lifetime = dependency_lifetime::singleton;
             std::function<std::shared_ptr<void>()> factory;
             std::shared_ptr<void> instance;
+        };
+
+        struct dependency_injector {
+            dependency_container& container;
+
+            /**
+             * @brief
+             */
+            template<typename T>
+            operator std::shared_ptr<T>();
         };
     }
 
@@ -119,6 +131,8 @@ namespace di {
          */
         template<typename T>
         std::shared_ptr<T> resolve() {
+            using dependency_injector = detail::dependency_injector;
+
             dependency_injector injector{ *this };
             if constexpr (std::is_constructible_v<T>) {
                 return std::make_shared<T>();
@@ -133,7 +147,7 @@ namespace di {
             } else if constexpr (std::is_constructible_v<T, dependency_injector, dependency_injector, dependency_injector, dependency_injector, dependency_injector>) {
                 return std::make_shared<T>(injector, injector, injector, injector, injector);
             } else {
-                static_assert(false, "No suitable constructor found");
+                return nullptr;
             }
         }
 
@@ -157,18 +171,8 @@ namespace di {
         std::unordered_map<std::type_index, detail::dependency_bean> _beans;
     };
 
-    /**
-     * @brief Helper class for dependency injection to constructor.
-     */
-    struct dependency_injector {
-        dependency_container& container;
-
-        /**
-         * @brief 
-         */
-        template<typename T>
-        operator std::shared_ptr<T>() {
-            return container.get<T>();
-        }
-    };
+    template<typename T>
+    detail::dependency_injector::operator std::shared_ptr<T>() {
+        return container.get<T>();
+    }
 }
