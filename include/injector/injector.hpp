@@ -25,6 +25,8 @@ namespace di {
     };
 
     namespace detail {
+        constexpr std::size_t max_constructor_arguments = 10;
+
         struct dependency_bean {
             dependency_lifetime lifetime = dependency_lifetime::singleton;
             std::function<std::shared_ptr<void>()> factory;
@@ -34,12 +36,48 @@ namespace di {
         struct dependency_injector {
             dependency_container& container;
 
-            /**
-             * @brief
-             */
             template<typename T>
             operator std::shared_ptr<T>();
         };
+
+        template<int>
+        using forward_injector = dependency_injector;
+
+        template<typename T, int... ints>
+        constexpr bool is_constructible(std::integer_sequence<int, ints...> seq) {
+            return std::is_constructible_v<T, forward_injector<ints>...>;
+        }
+
+        template<typename T, int size>
+        constexpr int constructor_argument_count() {
+            if constexpr (size > 0) {
+                return is_constructible<T>(std::make_integer_sequence<int, size>{}) ? size : constructor_argument_count<T, size - 1>();
+            } else {
+                return std::is_constructible_v<T> ? 0 : -1;
+            }
+        }
+
+        template<typename T>
+        constexpr int constructor_argument_count() {
+            return constructor_argument_count<T, max_constructor_arguments>();
+        }
+
+        template<std::size_t>
+        dependency_injector make_injector(di::dependency_container& container) {
+            return { container };
+        }
+
+        template<typename T, int... ints>
+        std::shared_ptr<T> resolve(dependency_container& container, std::integer_sequence<int, ints...> seq) {
+            return std::make_shared<T>(make_injector<ints>(container)...);
+        }
+
+        template<typename T>
+        std::shared_ptr<T> resolve(di::dependency_container& container) {
+            constexpr auto args = constructor_argument_count<T>();
+            static_assert(args > -1, "No suitable constructor found");
+            return resolve<T>(container, std::make_integer_sequence<int, args>{});
+        }
     }
 
     /**
@@ -131,24 +169,7 @@ namespace di {
          */
         template<typename T>
         std::shared_ptr<T> resolve() {
-            using dependency_injector = detail::dependency_injector;
-
-            dependency_injector injector{ *this };
-            if constexpr (std::is_constructible_v<T>) {
-                return std::make_shared<T>();
-            } else if constexpr (std::is_constructible_v<T, dependency_injector>) {
-                return std::make_shared<T>(injector);
-            } else if constexpr (std::is_constructible_v<T, dependency_injector, dependency_injector>) {
-                return std::make_shared<T>(injector, injector);
-            } else if constexpr (std::is_constructible_v<T, dependency_injector, dependency_injector, dependency_injector>) {
-                return std::make_shared<T>(injector, injector, injector);
-            } else if constexpr (std::is_constructible_v<T, dependency_injector, dependency_injector, dependency_injector, dependency_injector>) {
-                return std::make_shared<T>(injector, injector, injector, injector);
-            } else if constexpr (std::is_constructible_v<T, dependency_injector, dependency_injector, dependency_injector, dependency_injector, dependency_injector>) {
-                return std::make_shared<T>(injector, injector, injector, injector, injector);
-            } else {
-                return nullptr;
-            }
+            return detail::resolve<T>(*this);
         }
 
         /**
