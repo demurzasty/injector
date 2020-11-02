@@ -63,7 +63,7 @@ namespace di {
         }
 
         template<std::size_t>
-        dependency_injector make_injector(di::dependency_container& container) {
+        dependency_injector make_injector(dependency_container& container) {
             return { container };
         }
 
@@ -73,7 +73,7 @@ namespace di {
         }
 
         template<typename T>
-        std::shared_ptr<T> resolve(di::dependency_container& container) {
+        std::shared_ptr<T> resolve(dependency_container& container) {
             constexpr auto args = constructor_argument_count<T>();
             static_assert(args > -1, "No suitable constructor found");
             return resolve<T>(container, std::make_integer_sequence<int, args>{});
