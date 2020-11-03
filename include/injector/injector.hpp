@@ -29,7 +29,7 @@ namespace di {
 
         struct dependency_bean {
             dependency_lifetime lifetime = dependency_lifetime::singleton;
-            std::function<std::shared_ptr<void>()> factory;
+            std::function<std::shared_ptr<void>(dependency_container&)> factory;
             std::shared_ptr<void> instance;
         };
 
@@ -110,7 +110,7 @@ namespace di {
 
             _beans.emplace(typeid(T), detail::dependency_bean{
                 lifetime,
-                [this] { return resolve<T>(); },
+                [](dependency_container& container) { return container.resolve<T>(); },
                 nullptr
             });
         }
@@ -126,7 +126,7 @@ namespace di {
 
             _beans.emplace(typeid(Interface), detail::dependency_bean{
                 lifetime,
-                [this] { return resolve<Implementation>(); },
+                [](dependency_container& container) { return container.resolve<Implementation>(); },
                 nullptr
             });
         }
@@ -143,7 +143,7 @@ namespace di {
         void install(dependency_lifetime lifetime, std::shared_ptr<T>(*resolver)(dependency_container&)) {
             _beans.emplace(typeid(T), detail::dependency_bean{
                 lifetime,
-                [this, resolver]() { return resolver(*this); },
+                [resolver](dependency_container& container) { return resolver(container); },
                 nullptr
             });
         }
@@ -156,11 +156,11 @@ namespace di {
             auto& bean = _beans.at(typeid(T));
             if (bean.lifetime == dependency_lifetime::singleton) {
                 if (!bean.instance) {
-                    bean.instance = bean.factory();
+                    bean.instance = bean.factory(*this);
                 }
                 return std::static_pointer_cast<T>(bean.instance);
             } else {
-                return std::static_pointer_cast<T>(bean.factory());
+                return std::static_pointer_cast<T>(bean.factory(*this));
             }
         }
 
