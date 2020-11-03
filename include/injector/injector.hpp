@@ -140,7 +140,7 @@ namespace di {
          * @param resolver Resolver.
          */
         template<typename T>
-        void install(dependency_lifetime lifetime, std::shared_ptr<T>(*resolver)(dependency_container&)) {
+        void install(dependency_lifetime lifetime, std::function<std::shared_ptr<T>(dependency_container&)> resolver) {
             _beans.emplace(typeid(T), detail::dependency_bean{
                 lifetime,
                 [resolver](dependency_container& container) { return resolver(container); },
