@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <memory>
+#include <cassert>
 #include <typeinfo>
 #include <typeindex>
 #include <functional>
@@ -153,6 +154,8 @@ namespace di {
          */
         template<typename T>
         std::shared_ptr<T> get() {
+            assert(installed<T>());
+
             auto& bean = _beans.at(typeid(T));
             if (bean.lifetime == dependency_lifetime::singleton) {
                 if (!bean.instance) {
@@ -185,6 +188,8 @@ namespace di {
          */
         template<typename T>
         dependency_lifetime lifetime() const {
+            assert(installed<T>());
+
             return _beans.at(typeid(T)).lifetime;
         }
 
@@ -194,6 +199,7 @@ namespace di {
 
     template<typename T>
     detail::dependency_injector::operator std::shared_ptr<T>() {
+        assert(container.lifetime<T>() == dependency_lifetime::singleton);
         return container.get<T>();
     }
 }
