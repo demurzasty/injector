@@ -153,7 +153,7 @@ namespace di {
          * @brief Get (and create if needed) dependency. 
          */
         template<typename T>
-        std::shared_ptr<T> get() {
+        [[nodiscard]] std::shared_ptr<T> get() {
             assert(installed<T>());
 
             auto& bean = _beans.at(typeid(T));
@@ -171,7 +171,7 @@ namespace di {
          * @brief Resolve instance. 
          */
         template<typename T>
-        std::shared_ptr<T> resolve() {
+        [[nodiscard]] std::shared_ptr<T> resolve() {
             return detail::resolve<T>(*this);
         }
 
@@ -179,7 +179,7 @@ namespace di {
          * @brief Tell whether dependency is installed.
          */
         template<typename T>
-        bool installed() const {
+        [[nodiscard]] bool installed() const {
             return _beans.find(typeid(T)) != _beans.end();
         }
 
@@ -187,7 +187,7 @@ namespace di {
          * @brief Returns lifetime of dependency.
          */
         template<typename T>
-        dependency_lifetime lifetime() const {
+        [[nodiscard]] dependency_lifetime lifetime() const {
             assert(installed<T>());
 
             return _beans.at(typeid(T)).lifetime;
