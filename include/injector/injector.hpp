@@ -49,6 +49,11 @@ namespace di {
             return std::is_constructible_v<T, forward_injector<ints>...>;
         }
 
+        template<typename Func, int... ints>
+        constexpr bool is_invocable(std::integer_sequence<int, ints...> seq) {
+            return std::is_invocable_v<Func, forward_injector<ints>...>;
+        }
+
         template<typename T, int size>
         constexpr int constructor_argument_count() {
             if constexpr (size > 0) {
@@ -58,9 +63,23 @@ namespace di {
             }
         }
 
+        template<typename Func, int size>
+        constexpr int function_argument_count() {
+            if constexpr (size > 0) {
+                return is_invocable<Func>(std::make_integer_sequence<int, size>{}) ? size : function_argument_count<Func, size - 1>();
+            } else {
+                return std::is_invocable_v<Func> ? 0 : -1;
+            }
+        }
+
         template<typename T>
         constexpr int constructor_argument_count() {
             return constructor_argument_count<T, max_constructor_arguments>();
+        }
+
+        template<typename Func>
+        constexpr int function_argument_count() {
+            return function_argument_count<Func, max_constructor_arguments>();
         }
 
         template<std::size_t>
@@ -73,11 +92,23 @@ namespace di {
             return std::make_shared<T>(make_injector<ints>(container)...);
         }
 
+        template<typename Func, int... ints>
+        void invoke(dependency_container& container, Func func, std::integer_sequence<int, ints...> seq) {
+            return std::invoke(func, make_injector<ints>(container)...);
+        }
+
         template<typename T>
         std::shared_ptr<T> resolve(dependency_container& container) {
             constexpr auto args = constructor_argument_count<T>();
             static_assert(args > -1, "No suitable constructor found");
             return resolve<T>(container, std::make_integer_sequence<int, args>{});
+        }
+
+        template<typename Func>
+        void invoke(dependency_container& container, Func func) {
+            constexpr auto args = function_argument_count<Func>();
+            static_assert(args > -1, "No suitable invocation");
+            return invoke(container, func, std::make_integer_sequence<int, args>{});
         }
     }
 
@@ -173,6 +204,14 @@ namespace di {
         template<typename T>
         [[nodiscard]] std::shared_ptr<T> resolve() {
             return detail::resolve<T>(*this);
+        }
+
+        /**
+         * @brief Invoke function.
+         */
+        template<typename Func>
+        void invoke(Func func) {
+            detail::invoke(*this, func);
         }
 
         /**
