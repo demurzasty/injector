@@ -6,12 +6,10 @@ project (injector
 	LANGUAGES CXX
 )
 
-option (INJECTOR_BUILD_EXAMPLES "Enable examples building" OFF)
-
 add_library (injector INTERFACE)
 target_include_directories (injector INTERFACE "include")
 target_compile_features (injector INTERFACE cxx_std_17)
 
-if (INJECTOR_BUILD_EXAMPLES)
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	add_subdirectory ("examples")
 endif ()
